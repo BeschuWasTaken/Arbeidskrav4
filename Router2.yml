@@ -1,0 +1,61 @@
+---
+
+- name: Configure interface
+  gather_facts: false
+  hosts: 192.168.0.3
+  tasks:
+    - name: Open main interface
+      ios_config:
+        lines:
+          - no shutdown
+        parents: interface GigabitEthernet0/1
+
+    - name: Set IP Address
+      ios_config:
+        lines:
+          - encapsulation dot1Q 99
+          - ip address 10.10.99.3 255.255.255.0
+          - no shutdown
+        parents: interface GigabitEthernet0/1.99
+
+    - name: Set IP Address 2
+      ios_config:
+        lines:
+          - encapsulation dot1Q 10
+          - ip address 10.10.10.3 255.255.255.0
+          - no shutdown
+        parents: interface GigabitEthernet0/1.10
+
+    - name: Enable HSRP for management network
+      ios_config:
+        lines:
+          - standby 1 ip 192.168.0.1
+          - standby 1 priority 100
+        parents: interface GigabitEthernet0/0
+
+    - name: Enable HSRP for vlan 99 on common network
+      ios_config:
+        lines:
+          - standby 2 ip 10.10.99.1
+          - standby 2 priority 100
+        parents: interface GigabitEthernet0/1.99
+
+    - name: Enable HSRP for vlan 10 on common network
+      ios_config:
+        lines:
+          - standby 3 ip 10.10.10.1
+          - standby 3 priority 100
+        parents: interface GigabitEthernet0/1.10
+        
+    - name: Enable DHCP
+      ios_config:
+        lines:
+          - network 10.10.10.0 255.255.255.0
+          - default-router 10.10.10.1
+        parents: ip dhcp pool STUD1
+
+    - name: Exclude addresses from DHCP pool
+      ios_config:
+        lines:
+          - ip dhcp excluded-address 10.10.10.1 10.10.10.149
+          - ip dhcp excluded-address 10.10.10.201 10.10.10.255
